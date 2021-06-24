@@ -1,6 +1,6 @@
 import numpy as np
 
-def roll(d, num, is_crit=False):
+def roll(d, num=1, is_crit=False):
     """
     Simulates a total dice roll for num of d
     :param d: int of sides of dice.

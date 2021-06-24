@@ -1,24 +1,10 @@
 import random
 import unittest
-import dice
+from util import roll
 
 from entity import Entity, Size, HitPoints, Ability, AbilityType, Attack, DamageType
 from combat import Battle, RoundHandler
-
-BUGBEAR = {
-    'name': 'Bugbear',
-    'ac': 16,
-    'max_hp': 27,
-    'size': Size.MEDIUM,
-    'attack': Attack('Morningstar', '2d8+2', DamageType.PIERCING)
-}
-COMMONER = {
-    'name': 'Commoner',
-    'ac': 10,
-    'max_hp': 4,
-    'size': random.choice([Size.MEDIUM, Size.SMALL]),
-    'attack': Attack('Club', '1d4', DamageType.BLUDGEONING)
-}
+from mobs import BUGBEAR, COMMONER
 
 class BattleTest(unittest.TestCase):
 
@@ -34,16 +20,33 @@ class BattleTest(unittest.TestCase):
 class RoundHandlerTest(unittest.TestCase):
 
     def setUp(self):
-        combatants = [Entity(**COMMONER) for _ in range(50)]
+        combatants = [Entity(**COMMONER) for _ in range(15)]
+        combatants.extend(Entity(**BUGBEAR) for _ in range(5))
         for c in combatants:
-            c.dex.value = sum(dice.roll('3d6'))
-        self.round = RoundHandler(combatants)
+            c.dex.value = roll(6, 3)
+        self.round_mass = RoundHandler(combatants)
 
     def test_round_handler(self):
-        prev = self.round.order[0]
-        for c in self.round.order[1:]:
+        prev = self.round_mass.order[0]
+        for c in self.round_mass.order[1:]:
             self.assertGreaterEqual(prev.initiative, c.initiative)
             if prev.initiative == c.initiative:
                 self.assertGreaterEqual(prev.dex.value, c.dex.value)
             prev = c
 
+    def test_handle_attack_hit(self):
+        commoner = Entity(**COMMONER)
+        commoner.attack.d = 1
+        bugbear = Entity(**BUGBEAR)
+        bugbear.ac = 1
+        commoner.target = bugbear
+        bugbear.target = commoner
+        rh = RoundHandler([commoner, bugbear])
+        rh.handle_attack(commoner)
+        self.assertLess(bugbear.hp.current, BUGBEAR['max_hp'], "Bugbear should take 1 or 2 damage.")
+        while commoner.hp.is_alive:
+            rh.handle_attack(bugbear)
+        self.assertEqual(commoner.hp.current, 0, "Commoner should be at zero hp")
+        self.assertFalse(commoner.hp.is_alive, "Commoner should be dead")
+        self.assertEqual(len(rh.order), 1, "Commoner should not be in order")
+        self.assertIsNone(bugbear.target, "Bugbear should have no target")

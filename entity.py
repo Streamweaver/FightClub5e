@@ -42,7 +42,7 @@ class HitPoints:
         self.drain = 0
         self.temp_hp = 0
         self.damage = 0
-        self.alive = True
+        self.is_alive = True
 
     def add_temp_hp(self, h):
         """
@@ -89,7 +89,7 @@ class HitPoints:
 
         if self.damage + d > self.max_hp:
             if self.damage + d >= self.max_hp * 2:
-                self.alive = False
+                self.is_alive = False
             self.damage = self.max_hp
         else:
             self.damage = self.damage + d
@@ -135,6 +135,15 @@ class Ability:
 class Attack:
 
     def __init__(self, label, num, d, bonus, damage_type, ability=AbilityType.STR):
+        """
+        Represents an individual attack.
+        :param label: str of name of attack
+        :param num: int of number of dice to roll
+        :param d: int of die type to roll
+        :param bonus: int of bonus to damage
+        :param damage_type: Enum of damage type
+        :param ability: enum of Ability used.
+        """
         self.label = label
         self.num = num
         self.d = d
@@ -142,12 +151,18 @@ class Attack:
         self.damage_type = damage_type
 
     def get_damage(self, is_crit=False):
+        """
+        Gets the total damage of the attack.
+
+        :param is_crit: bool of crit status
+        :return: int of total damage.
+        """
         return roll(self.d, self.num, is_crit) + self.bonus # TODO Refactor this to let crits happen.
 
 
 class Entity:
 
-    def __init__(self, name='', ac=10, max_hp=0, size=Size.MEDIUM, attack=None, prof_bonus=2):
+    def __init__(self, name='', ac=10, max_hp=0, size=Size.MEDIUM, attack=None, prof_bonus=2, faction=None):
         self.ac = ac
         self.hp = HitPoints(max_hp)
         self.size = size
@@ -157,7 +172,7 @@ class Entity:
         self.initiative = 0
         self.target = None
         self.name = name
-        self.faction = name.lower()
+        self.faction = faction if faction else self.name.lower()
 
     def _init_abilities(self):
         """
@@ -187,3 +202,10 @@ class Entity:
         if self.target is None or force_new:
             enemies = [c for c in combatants if c.faction != self.faction]
             self.target = np.random.choice(enemies)
+
+    def end_turn(self):
+        """
+        Hold method in case I need an end of turn handler.
+        :return:
+        """
+        pass

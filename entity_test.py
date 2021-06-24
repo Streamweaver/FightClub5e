@@ -2,23 +2,7 @@ import random
 import unittest
 
 from entity import Entity, Size, HitPoints, Ability, AbilityType, Attack, DamageType
-
-BUGBEAR = {
-    'ac': 16,
-    'max_hp': 27,
-    'size': Size.MEDIUM,
-    'attack': Attack('Morningstar', 2, 8, 2, DamageType.PIERCING),
-    'name': 'Bugbear'
-}
-
-COMMONER = {
-    'ac': 10,
-    'max_hp': 10,
-    'size': Size.MEDIUM,
-    'attack': Attack('Club', 1, 6, 0, DamageType.BLUDGEONING),
-    'name': 'Commoner'
-}
-
+from mobs import BUGBEAR, COMMONER
 
 def get_commoner():
     return {
@@ -92,11 +76,11 @@ class HitPointstest(unittest.TestCase):
         self.assertEqual(0, self.hp.current, 'It should floor at zero hp')
         self.assertEqual(hp, self.hp.damage, 'Damage should be qual to max hp')
 
-        self.assertTrue(self.hp.alive)
+        self.assertTrue(self.hp.is_alive)
 
         # Massive Damage should kill them instantly.
         self.hp.add_damage(hp)
-        self.assertFalse(self.hp.alive, 'Massive damage should kill the creature.')
+        self.assertFalse(self.hp.is_alive, 'Massive damage should kill the creature.')
 
     def test_heal(self):
         hp = BUGBEAR['max_hp']
@@ -149,7 +133,7 @@ class AttackTest(unittest.TestCase):
             damage = self.attack.get_damage()
             self.assertLessEqual(damage, 20, 'Damage is below 5 which is expected min.')
             self.assertGreaterEqual(damage, 5, 'Damage is above 20')
-        for _ in range(100):
+        for _ in range(100): # Test for crits
             damage = self.attack.get_damage(True)
             self.assertLessEqual(damage, 38)
             self.assertGreater(damage, 8)
