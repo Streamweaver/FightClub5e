@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from util import roll
+from exceptions import TargetException
 import numpy as np
 
 
@@ -192,7 +193,7 @@ class Entity:
         self.initiative = 0
         self.target = None
 
-    def select_taget(self, combatants, force_new=False):
+    def select_target(self, combatants, force_new=False):
         """
         Chooses a random target from an opposing faction.
         :param combatants: list of Entities to choose from.
@@ -201,6 +202,8 @@ class Entity:
         """
         if self.target is None or force_new:
             enemies = [c for c in combatants if c.faction != self.faction]
+            if not enemies or len(enemies) == 0:
+                raise TargetException("No {} tagets left alive")
             self.target = np.random.choice(enemies)
 
     def end_turn(self):

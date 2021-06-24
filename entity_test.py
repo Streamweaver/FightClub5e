@@ -164,6 +164,6 @@ class EntityTest(unittest.TestCase):
         combatants = [self.commoner, self.commoner2, self.bugbear]
         for c in combatants:
             self.assertIsNone(c.target)
-            c.select_taget(combatants)
+            c.select_target(combatants)
             self.assertIsNotNone(c.target)
             self.assertNotEqual(c.target.faction, c.faction)

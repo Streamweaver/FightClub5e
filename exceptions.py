@@ -1,0 +1,3 @@
+
+class TargetException(Exception):
+    pass

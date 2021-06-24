@@ -19,6 +19,7 @@ class RoundHandler:
         :param attacker: Entity attacking.
         :return:
         """
+        attacker.select_target(self.order) # TODO Raise error if no targets
         to_hit = roll(20)
         is_crit = True if to_hit == 20 else False
         attack_roll = to_hit + attacker.str.mod + attacker.prof_bonus
@@ -37,11 +38,9 @@ class RoundHandler:
         :return:
         """
         self.current = self.current + 1 # increment the round count
-        for c in self.order: # Get next live combatant
-            c.select_target(self.order) # Get a target.
-            # TODO raise error here if no targets left.
-            self.handle_attack(c) # Handle attack
-            c.end_turn()  # end turn
+        for actor in self.order: # Get next live combatant
+            self.handle_attack(actor) # Handle attack
+            actor.end_turn()  # end turn
 
 
 class Battle:

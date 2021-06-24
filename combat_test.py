@@ -1,7 +1,8 @@
 import random
 import unittest
-from util import roll
 
+from util import roll
+from exceptions import TargetException
 from entity import Entity, Size, HitPoints, Ability, AbilityType, Attack, DamageType
 from combat import Battle, RoundHandler
 from mobs import BUGBEAR, COMMONER
@@ -50,3 +51,5 @@ class RoundHandlerTest(unittest.TestCase):
         self.assertFalse(commoner.hp.is_alive, "Commoner should be dead")
         self.assertEqual(len(rh.order), 1, "Commoner should not be in order")
         self.assertIsNone(bugbear.target, "Bugbear should have no target")
+        self.assertRaises(TargetException, rh.handle_attack, bugbear,
+                          "Bugbear should raise exception if it has no target")
