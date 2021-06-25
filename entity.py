@@ -36,6 +36,22 @@ class AbilityType(Enum):
     WIS = 5
     CHA = 6
 
+
+def mob_factory(e_dict, num):
+    """
+    Returns a list of entities from the provided dict with unique names
+    :param e_dict: dict to use to initiate an entity
+    :param num: int of number of entities to produce.
+    :return:
+    """
+    entities = []
+    for i in range(num):
+        e = Entity(**e_dict)
+        e.name = f"{e.name}_{i + 1}"
+        entities.append(e)
+    return entities
+
+
 class HitPoints:
 
     def __init__(self, max_hp=0):
@@ -94,7 +110,8 @@ class HitPoints:
             self.damage = self.max_hp
         else:
             self.damage = self.damage + d
-            # TODO figure out what to do if down.
+            if self.current == 0:
+                self.is_alive = False
 
     def heal(self, h):
         """
@@ -200,10 +217,10 @@ class Entity:
         :param force_new: bool to force choosing a new target.
         :return:
         """
-        if self.target is None or force_new:
+        if self.target is None or not self.target.hp.is_alive or force_new:
             enemies = [c for c in combatants if c.faction != self.faction]
             if not enemies or len(enemies) == 0:
-                raise TargetException("No {} tagets left alive")
+                raise TargetException("No targets left alive")
             self.target = np.random.choice(enemies)
 
     def end_turn(self):

@@ -1,16 +1,16 @@
-# This is a sample Python script.
+from mobs import BUGBEAR, COMMONER
+from combat import Battle
+from entity import mob_factory
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+def bugbear_attack(n_bugbear, n_commoners):
+    bugbears = mob_factory(BUGBEAR, n_bugbear)
+    commoners = mob_factory(COMMONER, n_commoners)
+    battle = Battle(bugbears + commoners)
+    battle.start_fight()
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    bugbear_attack(12, 400)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

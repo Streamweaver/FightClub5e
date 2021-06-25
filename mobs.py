@@ -6,7 +6,8 @@ BUGBEAR = {
     'size': Size.MEDIUM,
     'attack': Attack('Morningstar', 2, 8, 2, DamageType.PIERCING),
     'name': 'Bugbear',
-    'faction': 'monster'
+    'faction': 'monster',
+    # 'type': 'Bugbear'
 }
 
 COMMONER = {
@@ -15,5 +16,7 @@ COMMONER = {
     'size': Size.MEDIUM,
     'attack': Attack('Club', 1, 6, 0, DamageType.BLUDGEONING),
     'name': 'Commoner',
-    'faction': 'villager'
+    'faction': 'villager',
+    # 'type': 'Commoner'
 }
+

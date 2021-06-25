@@ -2,10 +2,11 @@ import random
 import unittest
 
 from util import roll
-from exceptions import TargetException
-from entity import Entity, Size, HitPoints, Ability, AbilityType, Attack, DamageType
+from exceptions import TargetException, BattleException
+from entity import Entity, mob_factory
 from combat import Battle, RoundHandler
 from mobs import BUGBEAR, COMMONER
+
 
 class BattleTest(unittest.TestCase):
 
@@ -17,6 +18,22 @@ class BattleTest(unittest.TestCase):
 
     def test_battle(self):
         self.assertEqual(18, len(self.battle.combatants))
+
+    def test_start_fight_exceptions(self):
+        combatants = []
+        battle = Battle(combatants, verbose=False)
+        self.assertRaises(BattleException, battle.start_fight)
+        for i in range(3):
+            e = Entity(**COMMONER)
+            e.faction = e.faction + f"_{i}"
+            combatants.append(e)
+        self.assertRaises(BattleException, battle.start_fight)
+
+    def test_handle_rounds(self):
+        c = mob_factory(BUGBEAR, 3)
+        c.extend(mob_factory(COMMONER, 9))
+        battle = Battle(c, verbose=True)
+        battle.start_fight()
 
 class RoundHandlerTest(unittest.TestCase):
 
