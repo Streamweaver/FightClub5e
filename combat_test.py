@@ -35,7 +35,7 @@ class RoundHandlerTest(unittest.TestCase):
                 self.assertGreaterEqual(prev.dex.value, c.dex.value)
             prev = c
 
-    def test_handle_attack_hit(self):
+    def test_handle_attack(self):
         commoner = Entity(**COMMONER)
         commoner.attack.d = 1
         bugbear = Entity(**BUGBEAR)
@@ -51,5 +51,4 @@ class RoundHandlerTest(unittest.TestCase):
         self.assertFalse(commoner.hp.is_alive, "Commoner should be dead")
         self.assertEqual(len(rh.order), 1, "Commoner should not be in order")
         self.assertIsNone(bugbear.target, "Bugbear should have no target")
-        self.assertRaises(TargetException, rh.handle_attack, bugbear,
-                          "Bugbear should raise exception if it has no target")
+        self.assertRaises(TargetException, rh.handle_attack, bugbear)

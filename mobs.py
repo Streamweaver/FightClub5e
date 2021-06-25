@@ -11,7 +11,7 @@ BUGBEAR = {
 
 COMMONER = {
     'ac': 10,
-    'max_hp': 10,
+    'max_hp': 4,
     'size': Size.MEDIUM,
     'attack': Attack('Club', 1, 6, 0, DamageType.BLUDGEONING),
     'name': 'Commoner',

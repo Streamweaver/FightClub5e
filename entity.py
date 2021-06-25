@@ -135,17 +135,17 @@ class Ability:
 
 class Attack:
 
-    def __init__(self, label, num, d, bonus, damage_type, ability=AbilityType.STR):
+    def __init__(self, name, num, d, bonus, damage_type, ability=AbilityType.STR):
         """
         Represents an individual attack.
-        :param label: str of name of attack
+        :param name: str of name of attack
         :param num: int of number of dice to roll
         :param d: int of die type to roll
         :param bonus: int of bonus to damage
         :param damage_type: Enum of damage type
         :param ability: enum of Ability used.
         """
-        self.label = label
+        self.name = name
         self.num = num
         self.d = d
         self.bonus = bonus
