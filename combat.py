@@ -1,3 +1,4 @@
+import numpy as np
 from collections import defaultdict
 
 from util import roll
@@ -9,6 +10,7 @@ class RoundHandler:
         self.current = 0
         self.stats = None
         self.verbose = verbose
+        self.combatants = combatants
         for combatant in combatants:
             combatant.initiative = roll(20) + combatant.dex.mod
         self.order = sorted(combatants, key=lambda c: (c.initiative, c.dex.value), reverse=True)
@@ -21,28 +23,46 @@ class RoundHandler:
         # TODO move this into a round handler to track who is active (since that is the order)
         return {e.faction for e in self.order}
 
-    def handle_attack(self, attacker):
+    def handle_attack(self, attacker, targets):
         """
         Attacker attacks their target and applies damage if they hit.
         :param attacker: Entity attacking.
+        :param targets: list of possible targets
         :return:
         """
-        attacker.select_target(self.order) # Error Raised if not target.
-        msg = f"{attacker.name} misses {attacker.target.name}."
+        target = self.get_target(attacker)
+        attacker.last_target = target
+        msg = f"{attacker.title()} misses {target.title()}."
         to_hit = roll(20)
         is_crit = True if to_hit == 20 else False
         attack_roll = to_hit + attacker.str.mod + attacker.prof_bonus
-        if attack_roll >= attacker.target.ac:
+        if attack_roll >= target.ac:
             damage = attacker.attack.get_damage(is_crit)
             hit_type = "CRITS" if is_crit else "hits"
-            msg = f"{attacker.name} {hit_type} {attacker.target.name} with {attacker.attack.name} and does {damage} damage."
-            attacker.target.hp.add_damage(damage)
-            if not attacker.target.hp.is_alive:
-                msg = msg + f" {attacker.target.name} dies."
-                self.order.remove(attacker.target)
-                attacker.target = None
+            msg = f"{attacker.title()} {hit_type} {target.title()} with {attacker.attack.name} and does {damage} damage."
+            target.hp.add_damage(damage)
+            if not target.hp.is_alive:
+                msg = msg + f" {target.name} dies."
+                self.order.remove(target)
+                attacker.last_target = None
         if self.verbose:
             print(msg)
+
+    def get_possible_targets(self, attacker):
+        possible_targets = [e for e in self.combatants if e.hp.is_alive and e.faction != attacker.faction]
+        if not possible_targets:
+            raise TargetException('No valid targets.')
+        return possible_targets
+
+    def get_target(self, attacker):
+        """
+        Returns a target
+        :param attacker:
+        :return:
+        """
+        if attacker.last_target and attacker.last_target.hp.is_alive:
+            return attacker.last_target
+        return np.random.choice(self.get_possible_targets(attacker))
 
     def combatant_count(self):
         d = defaultdict(int)
@@ -62,8 +82,10 @@ class RoundHandler:
             print(f"**** Round {self.current} - {count} ****")
 
         for actor in self.order: # Get next live combatant
+            if not actor.hp.is_alive:
+                continue
             try:
-                self.handle_attack(actor) # Handle attack
+                self.handle_attack(actor, self.get_target(actor)) # Handle attack
                 actor.end_turn()
             except TargetException:
                 break # No targets left, break out.

@@ -47,10 +47,14 @@ def mob_factory(e_dict, num):
     entities = []
     for i in range(num):
         e = Entity(**e_dict)
+        _modify_zombie(e)
         e.name = f"{e.name}_{i + 1}"
         entities.append(e)
     return entities
 
+def _modify_zombie(e):
+    if e.name == 'Zombie':
+        e.hp = UndeadForitude(e.hp.max_hp)
 
 class HitPoints:
 
@@ -59,7 +63,10 @@ class HitPoints:
         self.drain = 0
         self.temp_hp = 0
         self.damage = 0
-        self.is_alive = True
+
+    @property
+    def is_alive(self):
+        return self.current > 0
 
     def add_temp_hp(self, h):
         """
@@ -93,7 +100,7 @@ class HitPoints:
         """
         return self.temp_hp + self.max_hp - self.damage
 
-    def add_damage(self, d):
+    def add_damage(self, d, is_critical=False, damage_type=None):
         """
         Adds specified amount of damage as needed.
 
@@ -104,14 +111,9 @@ class HitPoints:
         # floor at zero hp
         d = self.remove_temp_hp(d)
 
-        if self.damage + d > self.max_hp:
-            if self.damage + d >= self.max_hp * 2:
-                self.is_alive = False
+        self.damage = self.damage + d
+        if self.damage >= self.max_hp:
             self.damage = self.max_hp
-        else:
-            self.damage = self.damage + d
-            if self.current == 0:
-                self.is_alive = False
 
     def heal(self, h):
         """
@@ -125,6 +127,32 @@ class HitPoints:
         else:
             self.damage = self.damage - h
 
+class UndeadForitude(HitPoints):
+
+    def __init__(self, max_hp=0, con_mod=0):
+        self.con_mod = con_mod
+        super().__init__(max_hp)
+
+    def add_damage(self, d, is_critical=False, damage_type=None):
+        """
+        Adds damage, if
+
+        :param d: int of damage to apply
+        :param is_critical: bool is the damage from a critical
+        :param damage_type: Enum of damage type.
+        :return:
+        """
+        # remove any temp hp
+        # floor at zero hp
+        d = self.remove_temp_hp(d)
+
+        self.damage = self.damage + d
+        if self.damage >= self.max_hp:
+            self.damage = self.max_hp
+            if not is_critical:
+                if roll(20) + self.con_mod >= d:
+                    self.damage = self.max_hp - 1
+                    print("Just wont die!")
 
 class Ability:
 
@@ -180,19 +208,19 @@ class Attack:
 
 class Entity:
 
-    def __init__(self, name='', ac=10, max_hp=0, size=Size.MEDIUM, attack=None, prof_bonus=2, faction=None):
+    def __init__(self, name='', ac=10, max_hp=0, size=Size.MEDIUM, attack=None, prof_bonus=2, faction=None, abilities={}):
         self.ac = ac
         self.hp = HitPoints(max_hp)
         self.size = size
         self.attack = attack
         self.prof_bonus = prof_bonus
-        self._init_abilities()
+        self._init_abilities(abilities)
         self.initiative = 0
-        self.target = None
+        self.last_target = None
         self.name = name
         self.faction = faction if faction else self.name.lower()
 
-    def _init_abilities(self):
+    def _init_abilities(self, abilities):
         """
         This adds abilities to the entity as properties with the appropriate ability type
         string.  i.e. bugbear.str would return the Ability class assigned to str.
@@ -200,6 +228,7 @@ class Entity:
         """
         for a in AbilityType:
             name = a.name.lower()
+            value = 10 if name not in abilities else abilities[name]
             self.__setattr__(name, Ability(name, 10))
 
     def end_combat(self):
@@ -229,3 +258,6 @@ class Entity:
         :return:
         """
         pass
+
+    def title(self):
+        return f"{self.name.title()} ({self.hp.current}/{self.hp.max_hp})"

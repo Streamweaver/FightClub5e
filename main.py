@@ -1,16 +1,29 @@
-from mobs import BUGBEAR, COMMONER
+from mobs import BUGBEAR, COMMONER, SKELETON, ZOMBIE
 from combat import Battle
-from entity import mob_factory
+from entity import mob_factory, UndeadForitude
 
 
-def bugbear_attack(n_bugbear, n_commoners):
-    bugbears = mob_factory(BUGBEAR, n_bugbear)
-    commoners = mob_factory(COMMONER, n_commoners)
-    battle = Battle(bugbears + commoners)
+def get_fighters(m_data, m_num, c_data, c_num):
+    monsters = mob_factory(m_data, m_num)
+    commoners = mob_factory(c_data, c_num)
+    return monsters + commoners
+
+def monster_attack(m_data, m_num, c_data, c_num):
+    battle = Battle(get_fighters(m_data, m_num, c_data, c_num))
     battle.start_fight()
 
 
+def bugbear_attack(n_bugbear, n_commoners):
+    monster_attack(BUGBEAR, n_bugbear, COMMONER, n_commoners)
+
+
+def skeleton_attack(n_skeleton, n_commoners):
+    monster_attack(SKELETON, n_skeleton, COMMONER, n_commoners)
+
+def zombie_attack(n_zombies, n_commoners):
+    monster_attack(ZOMBIE, n_zombies, COMMONER, n_commoners)
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    bugbear_attack(12, 400)
+    zombie_attack(25, 74)
 
