@@ -7,4 +7,4 @@ for fun.
 
 ## Running Online
 You can run the Jupyter Notebook file FightClub.ipynb through [MyBinder](https://mybinder.org/).  Using the [link for this 
-project]() you should be able to launch and run it on your own.
+project](https://mybinder.org/v2/gh/Streamweaver/FightClub5e/HEAD?filepath=FightClub.ipynb) you should be able to launch and run it on your own.
