@@ -54,32 +54,40 @@ class HitPointstest(unittest.TestCase):
         # Normal HP
         hp = BUGBEAR['max_hp']
         d = 3
-        crit_damage = hp * 2
+
         self.hp.add_damage(d)
         self.assertEqual(d, self.hp.damage, 'It should record the damage')
         self.assertEqual(hp - d, self.hp.current, 'It should return the right current hp')
 
+    def test_add_temp_hp_damage(self):
+        # Normal HP
+        hp = BUGBEAR['max_hp']
+        d = 3
         # With Temp HP
         self.hp.add_temp_hp(d)
-        self.assertEqual(hp, self.hp.current, 'It should include temp hp')
+        self.assertEqual(hp + d, self.hp.current, 'It should include temp hp')
         self.hp.add_damage(1)
         self.assertEqual(d - 1, self.hp.temp_hp, 'It should remove from temp hp')
-        self.assertEqual(d, self.hp.damage, 'it should leave damage uneffected')
-        self.assertEqual(hp - 1, self.hp.current, 'It display total damage properly')
+        self.assertEqual(0, self.hp.damage, 'it should leave damage uneffected')
+        self.assertEqual(hp + d - 1, self.hp.current, 'It display total damage properly')
         self.hp.add_damage(d)
         self.assertEqual(0, self.hp.temp_hp, 'It should set temp hp to zero')
-        self.assertEqual(d + 1, self.hp.damage, 'It should apply overflow to damage')
-        self.assertEqual(hp - d - 1, self.hp.current, 'It should total all damage correctly')
 
-        # Send to zero.
+    def test_add_lethal_damage(self):
+        hp = BUGBEAR['max_hp']
+        d = 3
+
+        # Send their HP to zero.
         self.hp.add_damage(hp)
         self.assertEqual(0, self.hp.current, 'It should floor at zero hp')
-        self.assertEqual(hp, self.hp.damage, 'Damage should be qual to max hp')
+        self.assertEqual(hp, self.hp.damage, 'Damage should be equal to max hp')
+        self.assertFalse(self.hp.is_alive)
 
-        self.assertTrue(self.hp.is_alive)
-
+    def test_add_massive_damage(self):
+        # Normal HP
+        hp = BUGBEAR['max_hp']
         # Massive Damage should kill them instantly.
-        self.hp.add_damage(hp)
+        self.hp.add_damage(hp*2)
         self.assertFalse(self.hp.is_alive, 'Massive damage should kill the creature.')
 
     def test_heal(self):
@@ -149,21 +157,14 @@ class EntityTest(unittest.TestCase):
     def test_entity(self):
         self.assertIsNotNone(self.bugbear, 'The Bugbear does not exist!')
         for a in AbilityType:
-            self.assertEqual(10, getattr(self.bugbear, a.name.lower()).value, "Abilities not initialized to 10")
+            expected = BUGBEAR['abilities'][a.name.lower()]
+            self.assertEqual(expected, getattr(self.bugbear, a.name.lower()).value)
 
     def test_end_combat(self):
         self.bugbear.initiative = self.bugbear.dex.check()
         self.assertGreater(self.bugbear.initiative, 0)
-        self.bugbear.target = self.commoner
-        self.assertIsNotNone(self.bugbear.target)
+        self.bugbear.last_target = self.commoner
+        self.assertIsNotNone(self.bugbear.last_target)
         self.bugbear.end_combat()
         self.assertEqual(self.bugbear.initiative, 0)
-        self.assertIsNone(self.bugbear.target)
-
-    def test_select_target(self):
-        combatants = [self.commoner, self.commoner2, self.bugbear]
-        for c in combatants:
-            self.assertIsNone(c.target)
-            c.select_target(combatants)
-            self.assertIsNotNone(c.target)
-            self.assertNotEqual(c.target.faction, c.faction)
+        self.assertIsNone(self.bugbear.last_target)

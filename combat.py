@@ -28,23 +28,26 @@ class RoundHandler:
         """
         return {e.faction for e in self.order}
 
-    def handle_attack(self, attacker, target):
+    def handle_attack(self, attacker, target, attack):
         """
         Handles the process of an attacker rolling an attack roll against the targets defense and
         applying and results.
         :param attacker: Entity attacking.
         :param target: Entity to attack
+        :param attack: Attack to use
         :return:
         """
         attacker.last_target = target
         msg = f"{attacker.title()} misses {target.title()}."
         to_hit = roll(20)
         is_crit = True if to_hit == 20 else False
-        attack_roll = to_hit + attacker.str.mod + attacker.prof_bonus
+        attack_roll = sum([to_hit,
+                           getattr(attacker,attack.ability.name.lower()).mod,
+                           attacker.prof_bonus])
         if attack_roll >= target.ac:
-            damage = attacker.attack.get_damage(is_crit)
+            damage = attack.get_damage(is_crit)
             hit_type = "CRITS" if is_crit else "hits"
-            msg = f"{attacker.title()} {hit_type} {target.title()} with {attacker.attack.name} and does {damage} damage."
+            msg = f"{attacker.title()} {hit_type} {target.title()} with {attack.name} and does {damage} damage."
             target.hp.add_damage(damage)
             if not target.hp.is_alive:
                 msg = msg + f" {target.name} dies."
@@ -97,8 +100,9 @@ class RoundHandler:
             if not attacker.hp.is_alive:
                 continue
             try:
-                attacker.target = self.get_target(attacker)
-                self.handle_attack(attacker, attacker.target) # Handle attack
+                for attack in attacker.attacks:
+                    attacker.last_target = self.get_target(attacker)
+                    self.handle_attack(attacker, attacker.last_target, attack) # Handle attack
                 attacker.end_turn()
             except TargetException:
                 break # No targets left, break out.

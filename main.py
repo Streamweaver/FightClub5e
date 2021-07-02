@@ -1,4 +1,4 @@
-from mobs import BUGBEAR, COMMONER, SKELETON, ZOMBIE
+from mobs import BUGBEAR, COMMONER, SKELETON, ZOMBIE, VETERAN
 from combat import Battle
 from entity import mob_factory, UndeadForitude
 
@@ -25,5 +25,5 @@ def zombie_attack(n_zombies, n_commoners):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    zombie_attack(25, 74)
+    monster_attack(ZOMBIE, 25, VETERAN, 5)
 

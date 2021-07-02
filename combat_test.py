@@ -68,16 +68,16 @@ class RoundHandlerTest(unittest.TestCase):
 
     def test_handle_attack(self):
         commoner = Entity(**COMMONER)
-        commoner.attack.d = 1
+        commoner.attacks[0].d = 1
         bugbear = Entity(**BUGBEAR)
         bugbear.ac = 1
-        commoner.target = bugbear
-        bugbear.target = commoner
+        commoner.last_target = bugbear
+        bugbear.last_target = commoner
         rh = RoundHandler([commoner, bugbear], verbose=False)
-        rh.handle_attack(commoner, bugbear)
+        rh.handle_attack(commoner, bugbear, commoner.attacks[0])
         self.assertLess(bugbear.hp.current, BUGBEAR['max_hp'], "Bugbear should take 1 or 2 damage.")
         while commoner.hp.is_alive:
-            rh.handle_attack(bugbear, commoner)
+            rh.handle_attack(bugbear, commoner, bugbear.attacks[0])
         self.assertEqual(commoner.hp.current, 0, "Commoner should be at zero hp")
         self.assertFalse(commoner.hp.is_alive, "Commoner should be dead")
         self.assertEqual(len(rh.order), 1, "Commoner should not be in order")

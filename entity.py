@@ -180,21 +180,22 @@ class Ability:
 
 class Attack:
 
-    def __init__(self, name, num, d, bonus, damage_type, ability=AbilityType.STR):
+    def __init__(self, name, d_num, d_type, dam_bonus, damage_type, ability=AbilityType.STR):
         """
         Represents an individual attack.
         :param name: str of name of attack
-        :param num: int of number of dice to roll
-        :param d: int of die type to roll
-        :param bonus: int of bonus to damage
+        :param d_num: int of number of dice to roll
+        :param d_type: int of die type to roll
+        :param dam_bonus: int of bonus to damage
         :param damage_type: Enum of damage type
         :param ability: enum of Ability used.
         """
         self.name = name
-        self.num = num
-        self.d = d
-        self.bonus = bonus
+        self.num = d_num
+        self.d = d_type
+        self.bonus = dam_bonus
         self.damage_type = damage_type
+        self.ability = ability
 
     def get_damage(self, is_crit=False):
         """
@@ -208,11 +209,12 @@ class Attack:
 
 class Entity:
 
-    def __init__(self, name='', ac=10, max_hp=0, size=Size.MEDIUM, attack=None, prof_bonus=2, faction=None, abilities={}):
+    def __init__(self, name='', ac=10, max_hp=0, size=Size.MEDIUM,
+                 attacks=[], prof_bonus=2, faction=None, abilities={}):
         self.ac = ac
         self.hp = HitPoints(max_hp)
         self.size = size
-        self.attack = attack
+        self.attacks = attacks
         self.prof_bonus = prof_bonus
         self._init_abilities(abilities)
         self.initiative = 0
@@ -229,7 +231,7 @@ class Entity:
         for a in AbilityType:
             name = a.name.lower()
             value = 10 if name not in abilities else abilities[name]
-            self.__setattr__(name, Ability(name, 10))
+            self.__setattr__(name, Ability(name, value))
 
     def end_combat(self):
         """
@@ -237,20 +239,7 @@ class Entity:
         :return: None
         """
         self.initiative = 0
-        self.target = None
-
-    def select_target(self, combatants, force_new=False):
-        """
-        Chooses a random target from an opposing faction.
-        :param combatants: list of Entities to choose from.
-        :param force_new: bool to force choosing a new target.
-        :return:
-        """
-        if self.target is None or not self.target.hp.is_alive or force_new:
-            enemies = [c for c in combatants if c.faction != self.faction]
-            if not enemies or len(enemies) == 0:
-                raise TargetException("No targets left alive")
-            self.target = np.random.choice(enemies)
+        self.last_target = None
 
     def end_turn(self):
         """
