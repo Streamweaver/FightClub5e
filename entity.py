@@ -152,7 +152,7 @@ class UndeadForitude(HitPoints):
             if not is_critical:
                 if roll(20) + self.con_mod >= d:
                     self.damage = self.max_hp - 1
-                    print("Just wont die!")
+
 
 class Ability:
 
