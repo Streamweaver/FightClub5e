@@ -7,6 +7,12 @@ from exceptions import BattleException, TargetException
 class RoundHandler:
 
     def __init__(self, combatants, verbose=True):
+        """
+        This sets up the requirements to handle a combat round and handles the actions
+        that have to happen during a round.
+        :param combatants:
+        :param verbose:
+        """
         self.current = 0
         self.stats = None
         self.verbose = verbose
@@ -18,19 +24,18 @@ class RoundHandler:
     def get_factions(self):
         """
         Returns a set of the combatant factions.
-        :return:
+        :return: Set of faction strings active in the round order.
         """
-        # TODO move this into a round handler to track who is active (since that is the order)
         return {e.faction for e in self.order}
 
-    def handle_attack(self, attacker, targets):
+    def handle_attack(self, attacker, target):
         """
-        Attacker attacks their target and applies damage if they hit.
+        Handles the process of an attacker rolling an attack roll against the targets defense and
+        applying and results.
         :param attacker: Entity attacking.
-        :param targets: list of possible targets
+        :param target: Entity to attack
         :return:
         """
-        target = self.get_target(attacker)
         attacker.last_target = target
         msg = f"{attacker.title()} misses {target.title()}."
         to_hit = roll(20)
@@ -49,6 +54,12 @@ class RoundHandler:
             print(msg)
 
     def get_possible_targets(self, attacker):
+        """
+        Returns a list entities that are alive and not of the attackers faction.
+
+        :param attacker: Entity representing the attacker.
+        :return: list of Entities
+        """
         possible_targets = [e for e in self.combatants if e.hp.is_alive and e.faction != attacker.faction]
         if not possible_targets:
             raise TargetException('No valid targets.')
@@ -56,9 +67,10 @@ class RoundHandler:
 
     def get_target(self, attacker):
         """
-        Returns a target
+        Returns the attackers previous target if they are alive, or selects a new target
+        at random from the list of possible targets.
         :param attacker:
-        :return:
+        :return: Entity
         """
         if attacker.last_target and attacker.last_target.hp.is_alive:
             return attacker.last_target
@@ -81,12 +93,13 @@ class RoundHandler:
             count = ", ".join(f"{k}: {n}".title() for k, n in self.combatant_count().items())
             print(f"**** Round {self.current} - {count} ****")
 
-        for actor in self.order: # Get next live combatant
-            if not actor.hp.is_alive:
+        for attacker in self.order: # Get next live combatant
+            if not attacker.hp.is_alive:
                 continue
             try:
-                self.handle_attack(actor, self.get_target(actor)) # Handle attack
-                actor.end_turn()
+                attacker.target = self.get_target(attacker)
+                self.handle_attack(attacker, attacker.target) # Handle attack
+                attacker.end_turn()
             except TargetException:
                 break # No targets left, break out.
 
@@ -98,12 +111,24 @@ class RoundHandler:
 class Battle:
 
     def __init__(self, combatants=[], verbose=True):
+        """
+        Controls the elements and flow of a battle between combatants of
+        two different factions.
+
+        :param combatants: list of Entities in the battle.
+        :param verbose: bool of weather to print the results.
+        """
         self.combatants = combatants # To be a list of entities.
         self.started = False
         self.round = None
         self.verbose = verbose
 
     def start_fight(self):
+        """
+        Starts a fight or returns an exception if a valid fight is not configured.
+
+        :return:
+        """
         self.started = True
         self.round = RoundHandler(self.combatants, verbose=self.verbose)
         factions = self.round.get_factions()
@@ -114,18 +139,33 @@ class Battle:
         if self.verbose:
             f = list(self.round.get_factions())
             print(f"Fight starting between {f[0]} and {f[1]}")
-        self.handle_rounds()
-        self.end_fight()
+        self._handle_rounds()
+        return self._end_fight()
 
-    def handle_rounds(self):
+    def _handle_rounds(self):
+        """
+        Keeps iterating through rounds until there is only one faction left.
+
+        :return:
+        """
         while len(self.round.get_factions()) == 2:
             self.round.handle_round()
 
-    def end_fight(self):
+    def _end_fight(self):
+        """
+        Clears the battle and results on the outcome.
+
+        :return: dict of winning faction name and number of survivors.
+        """
+        data = {
+            'winning_faction': self.round.get_factions().pop(),
+            'survivors': len(self.round.order)
+        }
         if self.verbose:
             print(f"Winner: {self.round.get_factions().pop()}, with {len(self.round.order)} alive")
         self.round = None
         self.started = False
+        return data
 
 
 

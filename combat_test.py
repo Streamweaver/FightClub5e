@@ -29,11 +29,13 @@ class BattleTest(unittest.TestCase):
             combatants.append(e)
         self.assertRaises(BattleException, battle.start_fight)
 
-    def test_handle_rounds(self):
+    def test_start_fight(self):
         c = mob_factory(BUGBEAR, 3)
         c.extend(mob_factory(COMMONER, 9))
-        battle = Battle(c, verbose=True)
-        battle.start_fight()
+        battle = Battle(c, verbose=False)
+        result = battle.start_fight()
+        self.assertTrue(result['winning_faction'] in [BUGBEAR['faction'], COMMONER['faction']])
+
 
 class RoundHandlerTest(unittest.TestCase):
 
@@ -43,6 +45,18 @@ class RoundHandlerTest(unittest.TestCase):
         for c in combatants:
             c.dex.value = roll(6, 3)
         self.round_mass = RoundHandler(combatants)
+
+    def test_get_factions(self):
+        # Make sure we have 2 to start
+        factions = self.round_mass.get_factions()
+        self.assertEqual(len(factions), 2)
+
+        # Remove all of one faction
+        remove_faction = factions.pop()
+        for c in list(self.round_mass.order):
+            if c.faction == remove_faction:
+                self.round_mass.order.remove(c)
+        self.assertEqual(len(self.round_mass.get_factions()), 1)
 
     def test_round_handler(self):
         prev = self.round_mass.order[0]
@@ -59,13 +73,11 @@ class RoundHandlerTest(unittest.TestCase):
         bugbear.ac = 1
         commoner.target = bugbear
         bugbear.target = commoner
-        rh = RoundHandler([commoner, bugbear])
-        rh.handle_attack(commoner)
+        rh = RoundHandler([commoner, bugbear], verbose=False)
+        rh.handle_attack(commoner, bugbear)
         self.assertLess(bugbear.hp.current, BUGBEAR['max_hp'], "Bugbear should take 1 or 2 damage.")
         while commoner.hp.is_alive:
-            rh.handle_attack(bugbear)
+            rh.handle_attack(bugbear, commoner)
         self.assertEqual(commoner.hp.current, 0, "Commoner should be at zero hp")
         self.assertFalse(commoner.hp.is_alive, "Commoner should be dead")
         self.assertEqual(len(rh.order), 1, "Commoner should not be in order")
-        self.assertIsNone(bugbear.target, "Bugbear should have no target")
-        self.assertRaises(TargetException, rh.handle_attack, bugbear)
