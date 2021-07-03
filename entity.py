@@ -42,7 +42,7 @@ def mob_factory(e_dict, num):
     Returns a list of entities from the provided dict with unique names
     :param e_dict: dict to use to initiate an entity
     :param num: int of number of entities to produce.
-    :return:
+    :return: List of Entities.
     """
     entities = []
     for i in range(num):
@@ -250,3 +250,6 @@ class Entity:
 
     def title(self):
         return f"{self.name.title()} ({self.hp.current}/{self.hp.max_hp})"
+
+    def __str__(self):
+        return self.title()

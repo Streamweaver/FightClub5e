@@ -29,13 +29,25 @@ def zombie_attack(n_zombies, n_commoners):
     monster_attack(ZOMBIE, n_zombies, COMMONER, n_commoners)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    itr = 1000
+def count_wins(faction, iterations, combatants):
     winners = []
-    for _ in range(itr):
-        result = monster_attack(ZOMBIE, 10, VETERAN, 2, verbose=False)
+    for _ in range(iterations):
+        battle = Battle(combatants, verbose=False)
+        result = battle.start_fight()
         winners.append(result['winning_faction'])
     s = pd.Series(winners)
-    print(s.value_counts())
+
+    count = 0
+    try:
+        count = s.value_counts().loc[faction]
+    except KeyError:
+        pass
+    return count
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    red_team = mob_factory(ZOMBIE, 5)
+    blue_team = mob_factory(COMMONER, 15)
+    print(count_wins(COMMONER['faction'], 2, red_team + blue_team))
 
