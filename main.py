@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from copy import deepcopy
 
 from mobs import BUGBEAR, COMMONER, SKELETON, ZOMBIE, VETERAN
 from combat import Battle
@@ -32,22 +33,21 @@ def zombie_attack(n_zombies, n_commoners):
 def count_wins(faction, iterations, combatants):
     winners = []
     for _ in range(iterations):
-        battle = Battle(combatants, verbose=False)
+        battle = Battle(deepcopy(combatants), verbose=False)
         result = battle.start_fight()
         winners.append(result['winning_faction'])
     s = pd.Series(winners)
-
-    count = 0
-    try:
-        count = s.value_counts().loc[faction]
-    except KeyError:
-        pass
-    return count
+    return s.value_counts(normalize=True).to_dict()
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    red_team = mob_factory(ZOMBIE, 5)
-    blue_team = mob_factory(COMMONER, 15)
-    print(count_wins(COMMONER['faction'], 2, red_team + blue_team))
+    max_zombies = 3
+    max_commoners = 15
+    for num_z in range(max_zombies):
+        for num_c in range(max_commoners):
+            red_team = mob_factory(ZOMBIE, max_zombies + 1)
+            blue_team = mob_factory(COMMONER, max_zombies + 2)
+            print(count_wins(COMMONER['faction'], 1000, red_team + blue_team))
+            # TODO add all this to a list of dicts, write out to CSV.
 
